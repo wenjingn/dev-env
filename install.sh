@@ -14,9 +14,8 @@ parse_args()
   for arg
   do
     case $arg in
-      --database=*) database=`parse_arg "$arg"`
-    case $arg in
-      --master=*) master=`parse_arg "$arg"`
+      --database=*) database=`parse_arg "$arg"`;;
+      --master=*) master=`parse_arg "$arg"`;;
     esac
   done
 }
