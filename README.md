@@ -3,13 +3,12 @@ setup linux development enviroment
 
 download all packages and put them on right place like this Directory Structure
 ```
-srcroot/mysql/mysql-x.x.tar.gz
-             /mysql dependence packages
-       /mariadb/mariadb-x.x.tar.gz
-               /mariadb dependence packages
-       /nginx/nginx-x.x.tar.gz    
-       /php/php-x.x.tar.gz
-           /php dependence packages
+srcroot/db/mysql-x.x.tar.gz
+          /mariadb-x.x.tar.gz
+          /some dependence packages
+       /httpd/nginx-x.x.tar.gz    
+       /lang/php-x.x.tar.gz
+            /Python-x.x.tgz
 ```
 
 ```

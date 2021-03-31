@@ -112,35 +112,39 @@ install_maria()
 
 install_db()
 {
-  local daemon=$1
-  local basedir="/usr/local/${1}"
+  local daemon=$database
+  local basedir="/usr/local/${database}"
   local cnfdir="${basedir}/etc"
-  local insdir="/data/${1}db"
+  local insdir="/data/${database}db"
   local datadir="${insdir}/data"
 
-  echo "installing $1"
-  cd $1
-  install_$1
+  echo "installing ${database}"
+  cd db
+  install_${database}
 }
 
 configure_vim
-install_db $database
+install_db
 
 echo "installing php"
-cd php
+cd lang
 yum install -y libxml2-devel
 yum install -y sqlite-devel
-tar zxvf php*.tar.gz && rm php*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
+tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
 --enable-fpm \
 --enable-openssl \
 --enable-zlib && make && make install
 cp php.ini-development /usr/local/php/lib/php.ini
 cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
 cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
+leaving_dir 1
+
+echo "installing python"
+tar zxvf Python-*.tgz && rm Python-*.tgz && cd Python-* && ./configure --prefix=/usr/local/python && make && make install
 leaving_dir 2
 
 echo "installing nginx"
-cd nginx
+cd httpd
 yum install -y pcre-devel
 tar zxvf nginx*.tar.gz && rm nginx*.tar.gz && cd nginx-* && ./configure --prefix=/usr/local/nginx && make && make install
 cp ../../etc/nginx.conf /usr/local/nginx/conf/nginx.conf
