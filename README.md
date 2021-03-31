@@ -12,8 +12,9 @@ srcroot/db/mysql-x.x.tar.gz
 ```
 
 ```
+git clone https://github.com/wenjingn/dev-env
+cp dev-env/* srcroot
 cd srcroot
-git clone https://github.com/wenjingn/dev-env ./
 sh install.sh
 ```
 
