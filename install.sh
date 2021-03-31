@@ -4,6 +4,7 @@ yum install -y git gcc gcc-c++ make cmake autoconf
 yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel
 
 database="maria"
+master="jing"
 parse_arg()
 {
     echo $1 | sed -e 's/^[^=]*=//'
@@ -14,10 +15,19 @@ parse_args()
   do
     case $arg in
       --database=*) database=`parse_arg "$arg"`
+    case $arg in
+      --master=*) master=`parse_arg "$arg"`
     esac
   done
 }
 parse_args $@
+
+configure_vim()
+{
+  echo "configure vim for root & $master"
+  cp etc/.vimrc /root/.vimrc -f
+  cp etc/.vimrc /home/$master/.vimrc -f
+}
 
 leaving_dir()
 {
@@ -113,6 +123,7 @@ install_db()
   install_$1
 }
 
+configure_vim
 install_db $database
 
 echo "installing php"
