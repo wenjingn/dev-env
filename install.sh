@@ -122,45 +122,55 @@ install_db()
   install_${database}
 }
 
-configure_vim
-install_db
 
-echo "installing php"
-cd lang
-yum install -y libxml2-devel
-yum install -y sqlite-devel
-tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
---enable-fpm \
---enable-openssl \
---enable-zlib && make && make install
-cp php.ini-development /usr/local/php/lib/php.ini
-cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
-cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
-leaving_dir 1
+install_php()
+{
+  echo "installing php"
+  cd lang
+  yum install -y libxml2-devel
+  yum install -y sqlite-devel
+  tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
+  --enable-fpm \
+  --enable-openssl \
+  --enable-zlib && make && make install
+  cp php.ini-development /usr/local/php/lib/php.ini
+  cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
+  cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
+  leaving_dir 1
+}
 
-echo "installing python"
-tar zxvf Python-*.tgz && rm Python-*.tgz && cd Python-* && ./configure --prefix=/usr/local/python && make && make install
-leaving_dir 2
+install_python()
+{
+  echo "installing python"
+  tar zxvf Python-*.tgz && rm Python-*.tgz && cd Python-* && ./configure --prefix=/usr/local/python && make && make install
+  leaving_dir 2
+}
 
-echo "installing nginx"
-cd httpd
-yum install -y pcre-devel
-tar zxvf nginx*.tar.gz && rm nginx*.tar.gz && cd nginx-* && ./configure --prefix=/usr/local/nginx && make && make install
-cp ../../etc/nginx.conf /usr/local/nginx/conf/nginx.conf
-leaving_dir 2
-mkdir -p /data/www
-cp /usr/local/nginx/html/* /data/www/
+install_nginx()
+{
+  echo "installing nginx"
+  cd httpd
+  yum install -y pcre-devel
+  tar zxvf nginx*.tar.gz && rm nginx*.tar.gz && cd nginx-* && ./configure --prefix=/usr/local/nginx && make && make install
+  cp ../../etc/nginx.conf /usr/local/nginx/conf/nginx.conf
+  leaving_dir 2
+  mkdir -p /data/www
+  cp /usr/local/nginx/html/* /data/www/
+}
 
+configure_services()
+{
 echo "start servers & add them to the rc.local for boot running"
 cat > /tmp/services <<EOF
-/usr/local/${database}/bin/mysqld_safe &
+/usr/local/${1}/bin/mysqld_safe &
 /usr/local/php/sbin/php-fpm
 /usr/local/nginx/sbin/nginx
 EOF
 
-sh /tmp/services
-cat /tmp/services >> /etc/rc.local
-chmod +x /etc/rc.local
+  sh /tmp/services
+  cat /tmp/services >> /etc/rc.local
+  chmod +x /etc/rc.local
+}
 
 configure_env_vars () {
 echo "set sys env vars"
@@ -184,6 +194,13 @@ pathmunge /usr/local/php/bin
 pathmunge /usr/local/python/bin
 EOF
 }
+
+configure_vim
+install_db
+install_php
+install_python
+install_nginx
+configure_services $database
 configure_env_vars $database
 
 
