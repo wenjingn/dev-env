@@ -162,5 +162,30 @@ sh /tmp/services
 cat /tmp/services >> /etc/rc.local
 chmod +x /etc/rc.local
 
+configure_env_vars () {
+echo "set sys env vars"
+cat > /etc/profile.d/pathmunge.sh <<EOF
+pathmunge () {
+  case ":\${PATH}:" in
+    *:"\$1":*)
+      ;;
+    *)
+    if [ "\$2" = "after" ] ; then
+      PATH=\$PATH:\$1
+    else
+      PATH=\$1:\$PATH
+    fi
+  esac
+}
+
+pathmunge /usr/local/nginx/sbin
+pathmunge /usr/local/${1}/bin
+pathmunge /usr/local/php/bin
+pathmunge /usr/local/python/bin
+EOF
+}
+configure_env_vars $database
+
+
 firewall-cmd --add-port=80/tcp --permanent
 firewall-cmd --reload
