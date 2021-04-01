@@ -3,8 +3,6 @@ yum install -y vim wget net-tools
 yum install -y git gcc gcc-c++ make cmake autoconf
 yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel
 
-database="maria"
-master="jing"
 parse_arg()
 {
     echo $1 | sed -e 's/^[^=]*=//'
@@ -19,22 +17,13 @@ parse_args()
     esac
   done
 }
-parse_args $@
 
 configure_vim()
 {
   echo "configure vim for root & $master"
+  cd $srcroot
   cp etc/.vimrc /root/.vimrc -f
   cp etc/.vimrc /home/$master/.vimrc -f
-}
-
-leaving_dir()
-{
-  echo "leaving directory `pwd`"
-  for i in $(seq $1)
-  {
-      cd ../
-  }
 }
 
 create_daemon()
@@ -87,7 +76,6 @@ install_mysql()
   tar zxvf boost* && rm boost*.tar.gz && cd boost* && ./bootstrap.sh && ./b2 && cd ../ && mv boost* /usr/local/boost
   tar xvJf rpcsvc* && rm rpcsvc*.tar.xz && cd rpcsvc* && ./configure --sysconfdir=/etc && make && make install && cd ..
   unzip mysql* && rm mysql*.zip && cd mysql-* && mkdir bld && cd bld && cmake -DWITH_BOOST=/usr/local/boost .. && make && make install
-  leaving_dir 3
 
   echo "init mysql data"
   create_daemon
@@ -101,7 +89,6 @@ install_maria()
   tar zxvf mariadb* && rm mariadb*.tar.gz && cd mariadb-* && mkdir bld && cd bld && 
   cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local/maria \
   -DDEFAULT_SYSCONFDIR=/usr/local/maria/etc && make && make install
-  leaving_dir 3
 
   echo "init mariadb data"
   create_daemon
@@ -118,49 +105,93 @@ install_db()
   local datadir="${insdir}/data"
 
   echo "installing ${database}"
-  cd db
+  cd ${srcroot}/db
   install_${database}
 }
 
-configure_vim
-install_db
 
-echo "installing php"
-cd lang
-yum install -y libxml2-devel
-yum install -y sqlite-devel
-tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
---enable-fpm \
---enable-openssl \
---enable-zlib && make && make install
-cp php.ini-development /usr/local/php/lib/php.ini
-cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
-cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
-leaving_dir 1
+install_php()
+{
+  echo "installing php"
+  cd ${srcroot}/lang
+  yum install -y libxml2-devel
+  yum install -y sqlite-devel
+  tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
+  --enable-fpm \
+  --enable-openssl \
+  --enable-zlib && make && make install
+  cp php.ini-development /usr/local/php/lib/php.ini
+  cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
+  cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
+}
 
-echo "installing python"
-tar zxvf Python-*.tgz && rm Python-*.tgz && cd Python-* && ./configure --prefix=/usr/local/python && make && make install
-leaving_dir 2
+install_python()
+{
+  echo "installing python"
+  cd ${srcroot}/lang
+  tar zxvf Python-*.tgz && rm Python-*.tgz && cd Python-* && ./configure --prefix=/usr/local/python && make && make install
+}
 
-echo "installing nginx"
-cd httpd
-yum install -y pcre-devel
-tar zxvf nginx*.tar.gz && rm nginx*.tar.gz && cd nginx-* && ./configure --prefix=/usr/local/nginx && make && make install
-cp ../../etc/nginx.conf /usr/local/nginx/conf/nginx.conf
-leaving_dir 2
-mkdir -p /data/www
-cp /usr/local/nginx/html/* /data/www/
+install_nginx()
+{
+  echo "installing nginx"
+  cd ${srcroot}/httpd
+  yum install -y pcre-devel
+  tar zxvf nginx*.tar.gz && rm nginx*.tar.gz && cd nginx-* && ./configure --prefix=/usr/local/nginx && make && make install
+  cp ../../etc/nginx.conf /usr/local/nginx/conf/nginx.conf
+  mkdir -p /data/www
+  cp /usr/local/nginx/html/* /data/www/
+}
 
+configure_services()
+{
 echo "start servers & add them to the rc.local for boot running"
 cat > /tmp/services <<EOF
-/usr/local/${database}/bin/mysqld_safe &
+/usr/local/${1}/bin/mysqld_safe &
 /usr/local/php/sbin/php-fpm
 /usr/local/nginx/sbin/nginx
 EOF
 
-sh /tmp/services
-cat /tmp/services >> /etc/rc.local
-chmod +x /etc/rc.local
+  sh /tmp/services
+  cat /tmp/services >> /etc/rc.local
+  chmod +x /etc/rc.local
+}
+
+configure_env_vars () {
+echo "set sys env vars"
+cat > /etc/profile.d/pathmunge.sh <<EOF
+pathmunge () {
+  case ":\${PATH}:" in
+    *:"\$1":*)
+      ;;
+    *)
+    if [ "\$2" = "after" ] ; then
+      PATH=\$PATH:\$1
+    else
+      PATH=\$1:\$PATH
+    fi
+  esac
+}
+
+pathmunge /usr/local/nginx/sbin
+pathmunge /usr/local/${1}/bin
+pathmunge /usr/local/php/bin
+pathmunge /usr/local/python/bin
+EOF
+}
+
+database="maria"
+master="jing"
+srcroot=$(cd `dirname $0`; pwd)
+parse_args $@
+configure_vim
+install_db
+install_php
+install_python
+install_nginx
+configure_services $database
+configure_env_vars $database
+
 
 firewall-cmd --add-port=80/tcp --permanent
 firewall-cmd --reload
