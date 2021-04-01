@@ -3,8 +3,6 @@ yum install -y vim wget net-tools
 yum install -y git gcc gcc-c++ make cmake autoconf
 yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel
 
-database="maria"
-master="jing"
 parse_arg()
 {
     echo $1 | sed -e 's/^[^=]*=//'
@@ -19,22 +17,13 @@ parse_args()
     esac
   done
 }
-parse_args $@
 
 configure_vim()
 {
   echo "configure vim for root & $master"
+  cd $srcroot
   cp etc/.vimrc /root/.vimrc -f
   cp etc/.vimrc /home/$master/.vimrc -f
-}
-
-leaving_dir()
-{
-  echo "leaving directory `pwd`"
-  for i in $(seq $1)
-  {
-      cd ../
-  }
 }
 
 create_daemon()
@@ -87,7 +76,6 @@ install_mysql()
   tar zxvf boost* && rm boost*.tar.gz && cd boost* && ./bootstrap.sh && ./b2 && cd ../ && mv boost* /usr/local/boost
   tar xvJf rpcsvc* && rm rpcsvc*.tar.xz && cd rpcsvc* && ./configure --sysconfdir=/etc && make && make install && cd ..
   unzip mysql* && rm mysql*.zip && cd mysql-* && mkdir bld && cd bld && cmake -DWITH_BOOST=/usr/local/boost .. && make && make install
-  leaving_dir 3
 
   echo "init mysql data"
   create_daemon
@@ -101,7 +89,6 @@ install_maria()
   tar zxvf mariadb* && rm mariadb*.tar.gz && cd mariadb-* && mkdir bld && cd bld && 
   cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local/maria \
   -DDEFAULT_SYSCONFDIR=/usr/local/maria/etc && make && make install
-  leaving_dir 3
 
   echo "init mariadb data"
   create_daemon
@@ -118,7 +105,7 @@ install_db()
   local datadir="${insdir}/data"
 
   echo "installing ${database}"
-  cd db
+  cd ${srcroot}/db
   install_${database}
 }
 
@@ -126,7 +113,7 @@ install_db()
 install_php()
 {
   echo "installing php"
-  cd lang
+  cd ${srcroot}/lang
   yum install -y libxml2-devel
   yum install -y sqlite-devel
   tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
@@ -136,24 +123,22 @@ install_php()
   cp php.ini-development /usr/local/php/lib/php.ini
   cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
   cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
-  leaving_dir 1
 }
 
 install_python()
 {
   echo "installing python"
+  cd ${srcroot}/lang
   tar zxvf Python-*.tgz && rm Python-*.tgz && cd Python-* && ./configure --prefix=/usr/local/python && make && make install
-  leaving_dir 2
 }
 
 install_nginx()
 {
   echo "installing nginx"
-  cd httpd
+  cd ${srcroot}/httpd
   yum install -y pcre-devel
   tar zxvf nginx*.tar.gz && rm nginx*.tar.gz && cd nginx-* && ./configure --prefix=/usr/local/nginx && make && make install
   cp ../../etc/nginx.conf /usr/local/nginx/conf/nginx.conf
-  leaving_dir 2
   mkdir -p /data/www
   cp /usr/local/nginx/html/* /data/www/
 }
@@ -195,6 +180,10 @@ pathmunge /usr/local/python/bin
 EOF
 }
 
+database="maria"
+master="jing"
+srcroot=$(cd `dirname $0`; pwd)
+parse_args $@
 configure_vim
 install_db
 install_php
