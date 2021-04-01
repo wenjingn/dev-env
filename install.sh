@@ -1,7 +1,7 @@
 echo "setup development enviroment"
 yum install -y vim wget net-tools
 yum install -y git gcc gcc-c++ make cmake autoconf
-yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel
+yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel libcurl-devel
 
 parse_arg()
 {
@@ -118,8 +118,10 @@ install_php()
   yum install -y sqlite-devel
   tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
   --enable-fpm \
-  --enable-openssl \
-  --enable-zlib && make && make install
+  --with-openssl \
+  --with-zlib \
+  --with-pdo-mysql \
+  --with-curl && make && make install
   cp php.ini-development /usr/local/php/lib/php.ini
   cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
   cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
