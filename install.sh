@@ -1,7 +1,7 @@
 echo "setup development enviroment"
 yum install -y vim wget net-tools
 yum install -y git gcc gcc-c++ make cmake autoconf
-yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel libcurl-devel
+yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel libcurl-devel readline-devel
 
 parse_arg()
 {
@@ -121,6 +121,7 @@ install_php()
   --with-openssl \
   --with-zlib \
   --with-pdo-mysql \
+  --with-readline \
   --with-curl && make && make install
   cp php.ini-development /usr/local/php/lib/php.ini
   cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
