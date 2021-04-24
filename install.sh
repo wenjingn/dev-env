@@ -37,7 +37,7 @@ create_defins()
   mkdir -p $insdir
   mkdir -p $datadir
   chown $daemon:$daemon $insdir
-  chmod 750 $insdir
+  chmod 755 $insdir
 
   mkdir -p $cnfdir
   cat > $cnfdir"/my.cnf" <<EOF
