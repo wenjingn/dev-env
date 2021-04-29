@@ -124,6 +124,7 @@ install_php()
   --with-readline \
   --with-curl && make && make install
   cp php.ini-development /usr/local/php/lib/php.ini
+  echo 'date.timezone = Asia/Shanghai' >> /usr/local/php/lib/php.ini
   cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
   cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
 }
