@@ -1,6 +1,6 @@
 echo "setup development enviroment"
 yum install -y vim wget net-tools
-yum install -y git gcc gcc-c++ make cmake autoconf
+yum install -y gcc gcc-c++ make cmake autoconf
 yum install -y bison ncurses-devel zlib-devel libevent-devel openssl-devel libcurl-devel readline-devel
 
 parse_arg()
