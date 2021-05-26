@@ -1,0 +1,13 @@
+function phpl() {
+  for file in `ls $1`
+    do
+      file=$1"/"$file
+      if [ -d $file ] 
+      then
+        phpl $file
+      else
+        php -l $file
+      fi
+    done
+}
+phpl $1

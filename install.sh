@@ -116,13 +116,19 @@ install_php()
   cd ${srcroot}/lang
   yum install -y libxml2-devel
   yum install -y sqlite-devel
+  # install oniguruma regexp lib for mbstring ext
+  tar zxvf onig-*.tar.gz && rm onig-*.tar.gz && cd onig-* && ./configure --prefix=/usr && make && make install && cd ../  
   tar zxvf php-*.tar.gz && rm php-*.tar.gz && cd php-* && ./configure --prefix=/usr/local/php \
   --enable-fpm \
+  --enable-mbstring \
   --with-openssl \
   --with-zlib \
   --with-pdo-mysql \
   --with-readline \
   --with-curl && make && make install
+  cp ../composer /usr/local/php/bin/
+  cp ${srcroot}/etc/phpl /usr/local/php/bin/
+  chmod +x /usr/local/php/bin/phpl
   cp php.ini-development /usr/local/php/lib/php.ini
   echo 'date.timezone = Asia/Shanghai' >> /usr/local/php/lib/php.ini
   cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf
